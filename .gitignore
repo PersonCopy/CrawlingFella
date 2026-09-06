@@ -75,3 +75,6 @@ remote/.vscode/.browse.c_cpp.db*
 remote/.vscode/c_cpp_properties.json
 remote/.vscode/launch.json
 remote/.vscode/ipch
+
+# Sensitive data.
+crawlerArduino/include/secrets.h
