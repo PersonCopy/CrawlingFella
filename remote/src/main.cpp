@@ -27,11 +27,13 @@ void setup() {
 }
 
 void loop() {
-  Serial.println("Loop works.");
-  Serial.printf("X value: ");
+  // Output takes form (x, y, click)
+  Serial.printf("(");
   Serial.print(stick.getX());
-  Serial.printf(", Y value: ");
-  Serial.println(stick.getY());
-  Serial.println(stick.getClick());
+  Serial.printf(",");
+  Serial.print(stick.getY());
+  Serial.printf(",");
+  Serial.print(stick.getClick());
+  Serial.println(")");
   delay(DT);
 }

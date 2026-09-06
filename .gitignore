@@ -67,3 +67,10 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# PlatformIO stuff...
+remote/.pio
+remote/.vscode/.browse.c_cpp.db*
+remote/.vscode/c_cpp_properties.json
+remote/.vscode/launch.json
+remote/.vscode/ipch
