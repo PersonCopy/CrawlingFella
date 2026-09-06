@@ -2,9 +2,12 @@
 
 // put function declarations here:
 //void wrapServo(int);
-int xPin  = 27;
-int yPin  = 26;
-int inPin = 25;
+
+// Use ADC1 pins (GPIO 32 - 39), as ADC2
+// is used by the WiFi access point.
+int xPin  = 33;
+int yPin  = 32;
+int inPin = 35;
 
 // Values of analog stick.
 int16_t xVal;
@@ -20,6 +23,9 @@ void setup() {
   pinMode(xPin, INPUT);
   pinMode(yPin, INPUT);
   pinMode(inPin, INPUT);
+
+  // Start WiFi hotspot.
+  setupHotspot();
 
   // Initialize analog stick.
   stick = AnalogStick(xPin, yPin, inPin);
