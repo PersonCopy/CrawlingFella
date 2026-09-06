@@ -70,6 +70,7 @@ Testing/
 
 # PlatformIO stuff...
 remote/.pio
+remote/.vscode
 remote/.vscode/.browse.c_cpp.db*
 remote/.vscode/c_cpp_properties.json
 remote/.vscode/launch.json
