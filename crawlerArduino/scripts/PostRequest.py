@@ -3,9 +3,9 @@ import requests
 
 url = 'http://192.168.0.226/servo'
 obj = {
-    "A0" : 0,
-    "A1" : 0,
-    "A2" : 0
+    "A0" : 90,
+    "A1" : 90,
+    "A2" : 90
     }
 
 x = requests.post(url, json = obj)

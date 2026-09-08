@@ -87,7 +87,7 @@ int AnalogStick::getY()
     this->readInputs();
     return this->yVal;
 }
-int AnalogStick::getClick()
+bool AnalogStick::getClick()
 {
     this->readInputs();
     return this->click;

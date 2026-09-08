@@ -1,4 +1,6 @@
 #include "Common.h"
+#include "../../crawlerArduino/include/secrets.h"
+
 
 // put function declarations here:
 //void wrapServo(int);
@@ -16,7 +18,6 @@ int16_t pressedIn;
 //Servo myServo;
 AnalogStick stick;
 
-
 void setup() {
   Serial.begin(115200);
   Serial.println("ESP32 booted successfully via VS Code!");
@@ -27,6 +28,9 @@ void setup() {
   // Start WiFi hotspot.
   setupHotspot();
 
+  // Connect to WiFi.
+  //connectToWiFi();
+  
   // Initialize analog stick.
   stick = AnalogStick(xPin, yPin, inPin);
   Serial.println("Input defined.");
@@ -34,6 +38,7 @@ void setup() {
 
 void loop() {
   // Output takes form (x, y, click)
+  /*
   Serial.printf("(");
   Serial.print(stick.getX());
   Serial.printf(",");
@@ -41,5 +46,7 @@ void loop() {
   Serial.printf(",");
   Serial.print(stick.getClick());
   Serial.println(")");
+  */
+  sendStickCommand(stick);
   delay(DT);
 }

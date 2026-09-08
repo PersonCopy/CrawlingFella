@@ -31,5 +31,5 @@ class AnalogStick
         // Getter functions.
         int getX();
         int getY();
-        int getClick();
+        bool getClick();
 };
