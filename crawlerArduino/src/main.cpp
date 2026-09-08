@@ -1,31 +1,29 @@
 #include "Common.h"
 
-Servo servo1;
+Servo servos[4];
 int angle = 0;
-
-// put function declarations here:
-int myFunction(int, int);
 
 void setup() {
   Serial.begin(115200);
   Serial.println("ESP32 booted successfully via VS Code!");
+  servos[0].attach(10);
+  servos[1].attach(11);
+  servos[2].attach(12);
 
-  int result = myFunction(2, 3);
-  servo1.attach(10);
-
+  // Network connectivity.
   connectWiFi();
-}
-
-void loop() {
-  servo1.write(angle);
-  angle += 10;
-  angle %= 180;
-
-  delay(1000);
   printWiFiStatus();
 }
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+void loop() {
+  /* Servo test loop.
+  for (int i = 0; i < 3; i++)
+  {
+    int angle = servos[i].read();
+    servos[i].write(angle + 30 % 160);
+    delay(500);
+  }*/
+ 
+  // Run webserver function that checks for clients.
+  webServer(servos);
 }
