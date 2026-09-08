@@ -1,7 +1,7 @@
 #include "Common.h"
 
-Servo servos[4];
-int angle = 0;
+Servo servos[SERVO_COUNT];
+//byte angle = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -13,17 +13,22 @@ void setup() {
   // Network connectivity.
   connectWiFi();
   printWiFiStatus();
+
+  // Prime servos.
+  for (byte i = 0; i < SERVO_COUNT; i++)
+    servos[i].write(0);
 }
 
 void loop() {
   /* Servo test loop.
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < SERVO_COUNT; i++)
   {
     int angle = servos[i].read();
     servos[i].write(angle + 30 % 160);
     delay(500);
   }*/
- 
+
   // Run webserver function that checks for clients.
-  webServer(servos);
+  //webServer(servos);
+  printWiFiStatus();
 }

@@ -78,57 +78,88 @@ void webServer(Servo *servo)
     if (!client) return;
 
     Serial.println("new client");
-    String currentLine = "";                // make a String to hold incoming data from the client
-    while (client.connected())              // loop while the client's connected
+    
+    // Declare HTTP POST header & body.
+    String reqHeader = "";
+    String reqBody = "";
+    int contentLength = 0;
+
+    // Checks whether we've left the header.
+    bool isBody = false;
+
+    // Loop while client is connected.
+    while (client.connected())
     {
         if (client.available())
-        {             // if there's bytes to read from the client,
-            char c = client.read();             // read a byte, then
-            Serial.write(c);                    // print it out the serial monitor
-            if (c == '\n') {                    // if the byte is a newline character
+        {
+            char c = client.read();
 
-                // if the current line is blank, you got two newline characters in a row.
-                // that's the end of the client HTTP request, so send a response:
-                if (currentLine.length() == 0)
+            // Forming the request header first.
+            if (!isBody)
+            {
+                reqHeader += c;
+
+                // Check if POST request in header.
+                if (reqHeader.endsWith("\r\n\r\n")) 
                 {
-                    // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-                    // and a content-type so the client knows what's coming, then a blank line:
+                if (reqHeader.startsWith("POST /servo"))
+                {
+                    // Toggle body reading.
+                    isBody = true;
+
+                    // Find and define context length
+                    // to properly read body later.
+                    int index = reqHeader.indexOf("Content-Length: ");
+                    if (index != -1)
+                        contentLength = reqHeader.substring(index + 16).toInt();
+                    // Exit loop if GET response.
+                    else
+                    {
+                        client.println("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nReady");
+                        break;
+                    }
+                }
+                }
+            }
+
+            // Reading request body now.
+            else
+            {
+                // Append body.
+                reqBody += c;
+                
+                // Once context size is reached, parse JSON.
+                if (reqBody.length() >= contentLength)
+                {
+                    // Deserialize JSON.
+                    // Bad request will be returned if deserialization
+                    // was unsuccessful.
+                    JsonDocument doc;
+                    DeserializationError err = deserializeJson(doc, reqBody);
+                    if (err)
+                    {
+                        client.println("HTTP/1.1 400 Bad Request\r\n\r\n");
+                        break;
+                    }
+
+                    // Parse JSON body now.
+                    Serial.println("Received Payload:");
+                    jsonToServoControl(doc, servo);
+
+                    // Success response.
                     client.println("HTTP/1.1 200 OK");
-                    client.println("Content-type:text/html");
-                    client.println();
+                    client.println("Content-Type: application/json");
+                    client.println("Connection: close\r\n");
+                    client.println("{\"status\":\"success\"}");
 
-                    // the content of the HTTP response follows the header:
-                    client.print("Click <a href=\"/1/H\">here</a> turn the servo +10deg<br>");
-                    client.print("Click <a href=\"/1/L\">here</a> turn the servo -10deg<br>");
-
-                    // The HTTP response ends with another blank line:
-                    client.println();
-                    // break out of the while loop:
+                    // Exit loop.
                     break;
                 }
-                else
-                {    // if you got a newline, then clear currentLine:
-                    currentLine = "";
-                }
-            }
-            else if (c != '\r')
-            {  // if you got anything else but a carriage return character,
-                currentLine += c;      // add it to the end of the currentLine
-            }
-
-            int angle = servo[0].read();
-            // Check to see if the client request was "GET /H" or "GET /L":
-            if (currentLine.endsWith("GET /1/H"))
-            {
-                servo[0].write(angle + 10 % 180);
-            }
-            if (currentLine.endsWith("GET /1/L"))
-            {
-                servo[0].write(angle - 10 % 180);
             }
         }
     }
-    // close the connection:
+
+    // close the connection.
     client.stop();
     Serial.println("client disconnected");
 }
