@@ -26,10 +26,10 @@ void setup() {
   pinMode(inPin, INPUT);
 
   // Start WiFi hotspot.
-  setupHotspot();
+  //setupHotspot();
 
   // Connect to WiFi.
-  //connectToWiFi();
+  connectToWiFi();
   
   // Initialize analog stick.
   stick = AnalogStick(xPin, yPin, inPin);
@@ -37,16 +37,6 @@ void setup() {
 }
 
 void loop() {
-  // Output takes form (x, y, click)
-  /*
-  Serial.printf("(");
-  Serial.print(stick.getX());
-  Serial.printf(",");
-  Serial.print(stick.getY());
-  Serial.printf(",");
-  Serial.print(stick.getClick());
-  Serial.println(")");
-  */
   sendStickCommand(stick);
   delay(DT);
 }

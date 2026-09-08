@@ -14,8 +14,13 @@ int keyIndex = 0;
 // IP Address of device.
 // Set your Static IP address
 IPAddress local_IP(192, 168, 0, 226);
+int PORT = 5005;
 
-WiFiServer server(80);
+//WiFiServer server(80);
+WiFiUDP udp;
+
+// Expected packet size = 3 bytes.
+char packetBuffer[255];
 
 // Connect to hard coded wifi.
 void connectWiFi()
@@ -42,7 +47,10 @@ void connectWiFi()
         Serial.println("Connection failed.");
     
     // Start webserver.
-    server.begin();
+    //server.begin();
+
+    // Start UDP server.
+    udp.begin(PORT);
 }
 
 // Both printWiFiStatus() and a good chunk of webServer(...)
@@ -66,9 +74,49 @@ void printWiFiStatus()
     Serial.println(ip);
 }
 
+void UDPServer(Servo *servo)
+{
+    int packetSize = udp.parsePacket();
+
+    if (packetSize)
+    {
+        Serial.print(" Received packet from : ");
+        Serial.println(udp.remoteIP());
+
+        int len = udp.read(packetBuffer, 255);
+
+        // Put "terminating" 0 at end to treat as char* array.
+        if (len >= 0 && len < 255)
+        packetBuffer[len] = 0;
+
+        // Recieved data.
+        String data = (String)packetBuffer;
+        Serial.println("Data : %s\n" + data);
+        udp.endPacket();
+
+        // Parse as JSON.
+        JsonDocument doc;
+        DeserializationError err = deserializeJson(doc, data);
+        if (err)
+            Serial.println("JSON parse failed");
+            
+
+        // Parse JSON body now.
+        Serial.println("Received Payload:");
+        Serial.println(data);
+        jsonToServoControl(doc, servo);
+    }
+}
+
 // Running webserver function.
 // We will use POST to send angle commands per indexed servo.
 // The *servo parameter is expected to be an array.
+/*
+
+LEGACY. Now, UDP is used for faster latency.
+
+*/
+/*
 void webServer(Servo *servo)
 {
     // listen for incoming clients.
@@ -163,3 +211,4 @@ void webServer(Servo *servo)
     client.stop();
     Serial.println("client disconnected");
 }
+*/

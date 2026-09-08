@@ -20,14 +20,9 @@ void setup() {
 }
 
 void loop() {
-  /* Servo test loop.
-  for (int i = 0; i < SERVO_COUNT; i++)
-  {
-    int angle = servos[i].read();
-    servos[i].write(angle + 30 % 160);
-    delay(500);
-  }*/
-
   // Run webserver function that checks for clients.
-  webServer(servos);
+  //webServer(servos);
+
+  // Run UDP server to recieve data.
+  UDPServer(servos);
 }

@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <HTTPClient.h>
 #include "WiFi.h"
+#include "WiFiUdp.h"
 #include "Stick.h"
 #include "Network.h"
 #include "Control.h"

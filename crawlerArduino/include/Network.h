@@ -3,4 +3,5 @@
 void connectWiFi();
 void printWiFiStatus();
 
-void webServer(Servo*);
+//void webServer(Servo*);
+void UDPServer(Servo *servo);
