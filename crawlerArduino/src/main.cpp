@@ -29,6 +29,5 @@ void loop() {
   }*/
 
   // Run webserver function that checks for clients.
-  //webServer(servos);
-  printWiFiStatus();
+  webServer(servos);
 }

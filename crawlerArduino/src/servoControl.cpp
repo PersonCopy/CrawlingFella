@@ -4,14 +4,40 @@
 // converts them into servo output.
 void jsonToServoControl(JsonDocument &doc, Servo *servo)
 {
-    serializeJsonPretty(doc, Serial);
+    // Cast into JSON object.
+    JsonObjectConst jsonObj = doc.as<JsonObjectConst>();
 
-    // Set servos to 90deg to confirm logic works.
-    for (byte i = 0; i < SERVO_COUNT; i++)
-        servo[i].write(90);
+    for (JsonPairConst row : jsonObj)
+    {
+        // Separate into key value pair.
+        String key = row.key().c_str();
+        byte value = row.value().as<int>();
 
-    delay(2000);
+        // Separate key into command and servo index.
+        char command = key.charAt(0);
+        byte servoIndex = key.substring(1).toInt();
 
-    for (byte i = 0; i < SERVO_COUNT; i++)
-        servo[i].write(0);
+        // Execite command.
+        commandServo(command, &servo[servoIndex], value);
+    }
+}
+
+// Function to command servo motor.
+// command  :   A for absolute angle
+//              R for relative angle
+// *servo   :   Servo that is to be commanded.
+// value    :   Angle value in case of absolute angle "A"
+//              or in case of "R", change in angle.
+void commandServo(char command, Servo *servo, byte value)
+{
+    byte angle = 0;
+    // Set absolute angle.
+    if (command == 'A')
+        angle = value % MAX_ANGLE;
+    
+    // Change relative angle.
+    else if (command == 'R')
+        angle = servo->read() + value % MAX_ANGLE;
+    
+    servo->write(angle);
 }
