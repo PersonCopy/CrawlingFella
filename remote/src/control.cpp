@@ -27,7 +27,7 @@ void sendStickCommand(AnalogStick stick)
     JsonDocument doc;
     doc["A0"] = x_scaled;
     doc["A1"] = y_scaled;
-    doc["A2"] = 90;
+    doc["A2"] = 90; // 3rd servo is continuously rotating. 90 stops motion.
 
     // Serialize into UDP output directly.
     serializeJson(doc, udp);

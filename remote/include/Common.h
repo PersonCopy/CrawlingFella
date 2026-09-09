@@ -5,8 +5,9 @@
 #include "WiFi.h"
 #include "WiFiUdp.h"
 #include "Stick.h"
+#include "Buzzer.h"
 #include "Network.h"
 #include "Control.h"
 
-#define DT 100
+#define DT 10
 //#include <ESP32Servo.h>

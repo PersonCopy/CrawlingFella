@@ -10,6 +10,9 @@
 int xPin  = 33;
 int yPin  = 32;
 int inPin = 35;
+int buzzerPin = 15;
+
+bool clientsConnected = false;
 
 // Values of analog stick.
 int16_t xVal;
@@ -17,26 +20,46 @@ int16_t yVal;
 int16_t pressedIn;
 //Servo myServo;
 AnalogStick stick;
+Buzzer buzzer;
 
 void setup() {
   Serial.begin(115200);
   Serial.println("ESP32 booted successfully via VS Code!");
-  pinMode(xPin, INPUT);
-  pinMode(yPin, INPUT);
-  pinMode(inPin, INPUT);
-
-  // Start WiFi hotspot.
-  //setupHotspot();
-
-  // Connect to WiFi.
-  connectToWiFi();
   
   // Initialize analog stick.
   stick = AnalogStick(xPin, yPin, inPin);
   Serial.println("Input defined.");
+
+  buzzer = Buzzer(buzzerPin);
+  // Start WiFi hotspot.
+  setupHotspot();
+
+  // Connect to WiFi.
+  //connectToWiFi();
 }
 
 void loop() {
-  sendStickCommand(stick);
-  delay(DT);
+  // Toggle bool indicating change in state.
+  byte clientCount = WiFi.softAPgetStationNum();
+  if (clientCount != clientsConnected)
+  {
+    clientsConnected = clientCount;
+    Serial.println("Clients?: " + (String)clientsConnected);
+
+    // Play status change sound.
+    if (clientsConnected)
+      buzzer.playConnected();
+    else buzzer.playDisconnected();
+  }
+
+  // Send commands only if someone is connected to AP.
+  if (clientsConnected)
+  {
+    // Update stick inputs.
+    stick.readInputs();
+
+    // Send UDP commands to robot.
+    sendStickCommand(stick);
+    //delay(DT);
+  }
 }

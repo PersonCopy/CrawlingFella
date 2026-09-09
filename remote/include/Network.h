@@ -5,4 +5,3 @@ void setupHotspot();
 
 // Connect to home WiFi.
 void connectToWiFi();
-

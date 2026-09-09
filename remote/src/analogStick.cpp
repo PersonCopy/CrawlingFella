@@ -50,7 +50,13 @@ void AnalogStick::readInputs()
     // Scale from 2**12 to 2**8 by /16.
     int x  = scaleOffset(analogRead(xPin)) / 16 - 128;
     int y  = scaleOffset(analogRead(yPin)) / 16 - 128;
-    this->click = (int)analogRead(cPin) == 0 ? true : false;
+
+    
+    this->click[this->clickIndex] = (int)analogRead(cPin) == 0 ? true : false;
+
+    this->clickIndex++;
+    if (this->clickIndex >= sizeof(this->click))
+        this->clickIndex = 0;
 
     /*if (c && this->prevClick) this->click == c;
     this->prevClick = c;*/
@@ -66,9 +72,19 @@ void AnalogStick::readInputs()
 // Constructor of class. Assumes pinMode already set.
 AnalogStick::AnalogStick(int xPin, int yPin, int clickPin)
 {
+    // Set pinModes to INPUT.
+    pinMode(xPin, INPUT);
+    pinMode(yPin, INPUT);
+    pinMode(clickPin, INPUT);
+
+    // Set properties.
     this->xPin = xPin;
     this->yPin = yPin;
     this->cPin = clickPin;
+    this->clickIndex = 0;
+
+    for (bool obj : this->click)
+        obj = false;
 
     this->readInputs();
 }
@@ -79,16 +95,21 @@ AnalogStick::AnalogStick() {}
 // Getter functions.
 int AnalogStick::getX()
 {
-    this->readInputs();
     return this->xVal;
 }
+
 int AnalogStick::getY()
 {
-    this->readInputs();
     return this->yVal;
 }
+
 bool AnalogStick::getClick()
 {
-    this->readInputs();
-    return this->click;
+    for (bool obj : this->click)
+    {
+        if (!obj)
+            return false;
+        obj = false;
+    }
+    return true;
 }

@@ -22,6 +22,25 @@ void jsonToServoControl(JsonDocument &doc, Servo *servo)
     }
 }
 
+// Due to the nonlinearity of the servos,
+// A wrapper function needed to be made which
+// interpolates the weird behaviour of the potentiometer
+// after 135 degrees.
+int parseAngle(int angle)
+{
+    // Wrap safety to prevent overshoot.
+    angle %= 360;
+    if (angle > MAX_ANGLE)
+        angle = MAX_ANGLE;
+
+    // Since the REELY servos I'm using are nonlinear
+    // after 135-180 deg (wrapping to 180 at input 165),
+    // The output has to be scaled after that point.
+    if (angle > 135)
+         angle = map(angle, 135, 180, 135, 165);
+    return angle;
+}
+
 // Function to command servo motor.
 // command  :   A for absolute angle
 //              R for relative angle
@@ -32,12 +51,13 @@ void commandServo(char command, Servo *servo, byte value)
 {
     byte angle = 0;
     // Set absolute angle.
-    if (command == 'A')
-        angle = value % MAX_ANGLE;
+    if (command == 'A'){
+    Serial.println(value);
+        angle = parseAngle(value);}
     
     // Change relative angle.
     else if (command == 'R')
-        angle = servo->read() + value % MAX_ANGLE;
+        angle = parseAngle(servo->read() + value);
     
     servo->write(angle);
 }

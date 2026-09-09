@@ -15,11 +15,8 @@ class AnalogStick
         int yVal;
         int yPrev;
 
-        bool click;
-        bool prevClick;
-
-        // Direct analog value reading.
-        void readInputs();
+        bool click[50];
+        byte clickIndex;
     
     public:
         // Constructor of class. Assumes pinMode already set.
@@ -27,6 +24,9 @@ class AnalogStick
 
         // Fallback.
         AnalogStick();
+
+        // Direct analog value reading.
+        void readInputs();
 
         // Getter functions.
         int getX();
