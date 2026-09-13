@@ -7,9 +7,12 @@ WiFiClient client;
 HTTPClient http;
 const char* serverName = "http://192.168.0.226/servo";
 */
+
+// Fixed robot IP and UDP port.
 const char* serverIP = "192.168.0.226";
 int port = 5005;
 
+// UDP component defined.
 WiFiUDP udp;
 
 void sendStickCommand(AnalogStick stick)
@@ -27,7 +30,9 @@ void sendStickCommand(AnalogStick stick)
     JsonDocument doc;
     doc["A0"] = x_scaled;
     doc["A1"] = y_scaled;
-    doc["A2"] = 90; // 3rd servo is continuously rotating. 90 stops motion.
+
+    // 3rd servo is continuously rotating. 90 stops motion.
+    doc["A2"] = 90;
 
     // Serialize into UDP output directly.
     serializeJson(doc, udp);

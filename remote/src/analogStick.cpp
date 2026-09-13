@@ -1,16 +1,11 @@
 #include "Common.h"
 
-// Approximate value of controller when no input is given.
-// Note that it's not in the middle of 0-4096.
-const int center = 1840;
-
-// Scale offset of controller to center no-input.
-int scaleOffset(int analogVal)
+int AnalogStick::scaleOffset(int analogVal)
 {
     int scaledOutput = 0;
 
     // If the read value is smaller than the center,
-    // Scale it to fit between the true middle and zero.
+    // scale it to fit between the true middle and zero.
     if (analogVal < center)
     {
         // Scale so that center * const = 2048
@@ -32,28 +27,32 @@ int scaleOffset(int analogVal)
     return scaledOutput;
 }
 
-// Filter out small jitter while letting large changes pass through.
-int filterNoise(int raw, int previous)
+int AnalogStick::filterNoise(int raw, int* previous)
 {
-    float diff = raw - previous;
+    float diff = raw - *previous;
     float alpha = fabs(diff) / 10.0;
 
     if (alpha < 0.05) alpha = 0.05;
     if (alpha > 1.0) alpha = 1.0;
 
-    return previous + alpha * diff;
+    // Set new "previous" value.
+    *previous = *previous + (int)(alpha * diff);
+    return *previous;
 }
 
-// Direct analog value reading.
 void AnalogStick::readInputs()
 {
     // Scale from 2**12 to 2**8 by /16.
-    int x  = scaleOffset(analogRead(xPin)) / 16 - 128;
-    int y  = scaleOffset(analogRead(yPin)) / 16 - 128;
+    int x  = this->scaleOffset(analogRead(xPin)) / 16 - 128;
+    int y  = this->scaleOffset(analogRead(yPin)) / 16 - 128;
 
-    
+    // Click-sensor will output exactly 0 when clicked in.
     this->click[this->clickIndex] = (int)analogRead(cPin) == 0 ? true : false;
 
+    // Updates index of the clicks array.
+    // The current click value can only be true if all the entries
+    // (so past n entries)
+    // are also TRUE to avoid sensor noise misinput.
     this->clickIndex++;
     if (this->clickIndex >= sizeof(this->click))
         this->clickIndex = 0;
@@ -61,15 +60,11 @@ void AnalogStick::readInputs()
     /*if (c && this->prevClick) this->click == c;
     this->prevClick = c;*/
 
-    this->xVal = filterNoise(x, this->xPrev);
-    this->yVal = filterNoise(y, this->yPrev);
-
-    // Update previous values.
-    this->xPrev = this->xVal;
-    this->yPrev = this->yVal;
+    // Filter out sensor noise.
+    this->xVal = this->filterNoise(x, &this->xPrev);
+    this->yVal = this->filterNoise(y, &this->yPrev);
 }
 
-// Constructor of class. Assumes pinMode already set.
 AnalogStick::AnalogStick(int xPin, int yPin, int clickPin)
 {
     // Set pinModes to INPUT.
@@ -83,16 +78,18 @@ AnalogStick::AnalogStick(int xPin, int yPin, int clickPin)
     this->cPin = clickPin;
     this->clickIndex = 0;
 
+    // Initialize all entries as false.
     for (bool obj : this->click)
         obj = false;
 
+    // Get data.
     this->readInputs();
 }
 
-// Fallback constructor.
 AnalogStick::AnalogStick() {}
 
 // Getter functions.
+
 int AnalogStick::getX()
 {
     return this->xVal;

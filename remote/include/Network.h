@@ -1,7 +1,15 @@
 #pragma once
 
-// Function to set up access point.
+/**
+ * @brief Configures and starts access point/hotspot.
+ */
 void setupHotspot();
 
-// Connect to home WiFi.
+/**
+ * @brief Connects to home WiFi.
+ * 
+ * Credentials hard coded into secrets.h,
+ * which is in the gitignore and therefore not
+ * visible in this repo.
+ */
 void connectToWiFi();

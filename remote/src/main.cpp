@@ -18,19 +18,19 @@ bool clientsConnected = false;
 int16_t xVal;
 int16_t yVal;
 int16_t pressedIn;
-//Servo myServo;
 AnalogStick stick;
 Buzzer buzzer;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("ESP32 booted successfully via VS Code!");
+  Serial.println("ESP32 booted successfully!");
   
   // Initialize analog stick.
   stick = AnalogStick(xPin, yPin, inPin);
   Serial.println("Input defined.");
 
   buzzer = Buzzer(buzzerPin);
+  
   // Start WiFi hotspot.
   setupHotspot();
 

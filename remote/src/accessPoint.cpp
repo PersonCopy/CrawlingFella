@@ -14,13 +14,14 @@ IPAddress local_IP(192, 168, 0, 225);
 IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
 
-
-// Configures and starts access point / hotspot.
 void setupHotspot()
 {
+    // Configuring fixed IP and gateway so that clients
+    // can always refer to the same IP.
     WiFi.softAPConfig(local_IP, gateway, subnet);
     WiFi.mode(WIFI_AP);
 
+    // Hotspot started.
     WiFi.softAP(Apssid, Appassword);
     IPAddress myIP = WiFi.softAPIP();
 
@@ -30,7 +31,7 @@ void setupHotspot()
 
 void connectToWiFi()
 {
-    // Set IP and the likes.
+    // Configure fixed IP and gateway.
     WiFi.config(local_IP, gateway, subnet);
 
     // Make connection attempt.
@@ -38,7 +39,7 @@ void connectToWiFi()
     char password[] = SECRET_PASS;
     WiFi.begin(ssid, password);
 
-    // Loop attempts.
+    // Attempt to connect to WiFi a max of 20 times.
     int attempts = 0;
     while (WiFi.status() != WL_CONNECTED && attempts < 20)
     {
@@ -48,7 +49,7 @@ void connectToWiFi()
         attempts++;
     }
 
-    // Output result.
+    // Output result of connection attempt.
     if (WiFi.status() == WL_CONNECTED)
     {
         Serial.println(WiFi.status());

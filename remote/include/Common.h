@@ -9,5 +9,6 @@
 #include "Network.h"
 #include "Control.h"
 
+/// @brief Timestep duration.
 #define DT 10
 //#include <ESP32Servo.h>
