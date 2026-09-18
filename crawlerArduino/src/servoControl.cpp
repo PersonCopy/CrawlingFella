@@ -1,12 +1,14 @@
 #include "Common.h"
 
-// Takes the instructions in JSON document and
-// converts them into servo output.
-void jsonToServoControl(JsonDocument &doc, Servo *servo)
+void jsonToServoControl(JsonDocument &doc, Servo *servos)
 {
-    // Cast into JSON object.
+    // Cast document into JSON object.
     JsonObjectConst jsonObj = doc.as<JsonObjectConst>();
 
+    // Take every command and parse it as "AB" : C, where
+    // A: either 'A' or 'R',
+    // B: Index of servo to move,
+    // C: Value to send to command.
     for (JsonPairConst row : jsonObj)
     {
         // Separate into key value pair.
@@ -17,15 +19,11 @@ void jsonToServoControl(JsonDocument &doc, Servo *servo)
         char command = key.charAt(0);
         byte servoIndex = key.substring(1).toInt();
 
-        // Execite command.
-        commandServo(command, &servo[servoIndex], value);
+        // Execute command.
+        commandServo(command, &servos[servoIndex], value);
     }
 }
 
-// Due to the nonlinearity of the servos,
-// A wrapper function needed to be made which
-// interpolates the weird behaviour of the potentiometer
-// after 135 degrees.
 int parseAngle(int angle)
 {
     // Wrap safety to prevent overshoot.
@@ -33,31 +31,27 @@ int parseAngle(int angle)
     if (angle > MAX_ANGLE)
         angle = MAX_ANGLE;
 
-    // Since the REELY servos I'm using are nonlinear
+    // Since the specific REELY servos used are nonlinear
     // after 135-180 deg (wrapping to 180 at input 165),
-    // The output has to be scaled after that point.
+    // The output has to be mapped to match the real angle.
     if (angle > 135)
          angle = map(angle, 135, 180, 135, 165);
     return angle;
 }
 
-// Function to command servo motor.
-// command  :   A for absolute angle
-//              R for relative angle
-// *servo   :   Servo that is to be commanded.
-// value    :   Angle value in case of absolute angle "A"
-//              or in case of "R", change in angle.
 void commandServo(char command, Servo *servo, byte value)
 {
     byte angle = 0;
-    // Set absolute angle.
+
+    // Set servo to absolute angle if command is 'A'.
     if (command == 'A'){
     Serial.println(value);
         angle = parseAngle(value);}
     
-    // Change relative angle.
+    // Change servo angle by relative amount if command is 'R'.
     else if (command == 'R')
         angle = parseAngle(servo->read() + value);
     
+    // Send servo command.
     servo->write(angle);
 }

@@ -6,76 +6,73 @@
 // Not relevant when connecting to the remote's AP tho.
 #include "secrets.h"
 
-// Network to connect to.
-char ssid[] = SECRET_SSID;
-char password[] = SECRET_PASS;
-int keyIndex = 0;
+// AP of remote to connect to.
+char ap_ssid[] = AP_SSID;
+char ap_password[] = AP_PASS;
 
-// IP Address of device.
-// Set your Static IP address
+// Fallback Network.
+char w_ssid[] = WIFI_SSID;
+char w_password[] = WIFI_PASS;
+
+// Set fixed IP & UDP port.
 IPAddress local_IP(192, 168, 0, 226);
-int PORT = 5005;
+int8_t PORT = 5005;
 
-//WiFiServer server(80);
+// Declare UDP object.
 WiFiUDP udp;
 
 // Expected packet size = 3 bytes.
 char packetBuffer[255];
 
-// Connect to hard coded wifi.
 void connectWiFi()
 {
+    // Start connection with AP of remote control.
     WiFi.config(local_IP);
-    WiFi.begin(ssid, password);
+    WiFi.begin(ap_ssid, ap_password);
     
-    // Loop attempts.
-    int attempts = 0;
+    // Loop through 20 delays if the WiFi hasn't connected yet.
+    int8_t attempts = 0;
     while (WiFi.status() != WL_CONNECTED && attempts < 20)
     {
-
         delay(500);
         Serial.print(".");
         attempts++;
     }
 
+    // Print WiFi data to serial if connection was successful.
     if (WiFi.status() == WL_CONNECTED)
     {
         Serial.println(WiFi.status());
         Serial.println(WiFi.localIP());
     }
-    else
-        Serial.println("Connection failed.");
-    
-    // Start webserver.
-    //server.begin();
 
-    // Start UDP server.
+    // Connect to fallback network if connection failed.
+    else
+    {
+        Serial.println("Connection failed. Connecting to fallback WiFi.");
+        WiFi.begin(w_ssid, w_password);
+        delay(1000);
+    }
+    
+    // Start UDP server at PORT.
     udp.begin(PORT);
 }
 
-// Both printWiFiStatus() and a good chunk of webServer(...)
-// are taken from example code under:
-// https://github.com/arduino/ArduinoCore-renesas/blob/main/libraries/WiFiS3/examples/AP_SimpleWebServer/AP_SimpleWebServer.ino
-
-// Serial prints IP and status of connection.
 void printWiFiStatus()
 {
-    // print the SSID of the network you're attached to:
+    // print the SSID of the connected network.
     Serial.print("SSID: ");
     Serial.println(WiFi.SSID());
 
-    // print your WiFi shield's IP address:
+    // print IP address of robot.
     IPAddress ip = WiFi.localIP();
     Serial.print("IP Address: ");
-    Serial.println(ip);
-
-    // print where to go in a browser:
-    Serial.print("To see this page in action, open a browser to http://");
     Serial.println(ip);
 }
 
 void UDPServer(Servo *servo)
 {
+    // Catch packet.
     int packetSize = udp.parsePacket();
 
     if (packetSize)
@@ -83,13 +80,14 @@ void UDPServer(Servo *servo)
         Serial.print(" Received packet from : ");
         Serial.println(udp.remoteIP());
 
+        // Read packet into buffer expecting 256 elements.
         int len = udp.read(packetBuffer, 255);
 
         // Put "terminating" 0 at end to treat as char* array.
         if (len >= 0 && len < 255)
-        packetBuffer[len] = 0;
-
-        // Recieved data.
+            packetBuffer[len] = 0;
+        
+        // Parse recieved data as string.
         String data = (String)packetBuffer;
         Serial.println("Data : %s\n" + data);
         udp.endPacket();
@@ -100,115 +98,9 @@ void UDPServer(Servo *servo)
         if (err)
             Serial.println("JSON parse failed");
             
-
         // Parse JSON body now.
         Serial.println("Received Payload:");
         Serial.println(data);
         jsonToServoControl(doc, servo);
     }
 }
-
-// Running webserver function.
-// We will use POST to send angle commands per indexed servo.
-// The *servo parameter is expected to be an array.
-/*
-
-LEGACY. Now, UDP is used for faster latency.
-
-*/
-/*
-void webServer(Servo *servo)
-{
-    // listen for incoming clients.
-    WiFiClient client = server.available();
-
-    // End function if no client.
-    if (!client) return;
-
-    Serial.println("new client");
-    
-    // Declare HTTP POST header & body.
-    String reqHeader = "";
-    String reqBody = "";
-    int contentLength = 0;
-
-    // Checks whether we've left the header.
-    bool isBody = false;
-
-    // Loop while client is connected.
-    while (client.connected())
-    {
-        if (client.available())
-        {
-            char c = client.read();
-
-            // Forming the request header first.
-            if (!isBody)
-            {
-                reqHeader += c;
-
-                // Check if POST request in header.
-                if (reqHeader.endsWith("\r\n\r\n")) 
-                {
-                if (reqHeader.startsWith("POST /servo"))
-                {
-                    // Toggle body reading.
-                    isBody = true;
-
-                    // Find and define context length
-                    // to properly read body later.
-                    int index = reqHeader.indexOf("Content-Length: ");
-                    if (index != -1)
-                        contentLength = reqHeader.substring(index + 16).toInt();
-                    // Exit loop if GET response.
-                    else
-                    {
-                        client.println("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nReady");
-                        break;
-                    }
-                }
-                }
-            }
-
-            // Reading request body now.
-            else
-            {
-                // Append body.
-                reqBody += c;
-                
-                // Once context size is reached, parse JSON.
-                if (reqBody.length() >= contentLength)
-                {
-                    // Deserialize JSON.
-                    // Bad request will be returned if deserialization
-                    // was unsuccessful.
-                    JsonDocument doc;
-                    DeserializationError err = deserializeJson(doc, reqBody);
-                    if (err)
-                    {
-                        client.println("HTTP/1.1 400 Bad Request\r\n\r\n");
-                        break;
-                    }
-
-                    // Parse JSON body now.
-                    Serial.println("Received Payload:");
-                    jsonToServoControl(doc, servo);
-
-                    // Success response.
-                    client.println("HTTP/1.1 200 OK");
-                    client.println("Content-Type: application/json");
-                    client.println("Connection: close\r\n");
-                    client.println("{\"status\":\"success\"}");
-
-                    // Exit loop.
-                    break;
-                }
-            }
-        }
-    }
-
-    // close the connection.
-    client.stop();
-    Serial.println("client disconnected");
-}
-*/

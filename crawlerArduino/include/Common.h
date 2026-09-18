@@ -5,7 +5,7 @@
 #include "Network.h"
 #include "WiFiUdp.h"
 #include "ServoControl.h"
+//#include <Adafruit_MS_PWMServoDriver.h>
 
 #define SERVO_COUNT 3
-#define SERVO_MAX_ANGLE 180
-//#include <Adafruit_MS_PWMServoDriver.h>
+#define MAX_ANGLE 180
